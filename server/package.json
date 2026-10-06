@@ -6,7 +6,8 @@
   "scripts": {
     "dev": "nodemon app.js",
     "start": "node app.js",
-    "seed": "node database/seed.js"
+    "seed": "node database/seed.js",
+    "test": "node --test --test-concurrency=1 \"tests/**/*.test.js\""
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",

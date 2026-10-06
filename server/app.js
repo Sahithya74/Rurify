@@ -55,10 +55,12 @@ async function start() {
   });
 }
 
-start().catch((err) => {
-  // eslint-disable-next-line no-console
-  console.error('Failed to start server:', err);
-  process.exit(1);
-});
+if (require.main === module) {
+  start().catch((err) => {
+    // eslint-disable-next-line no-console
+    console.error('Failed to start server:', err);
+    process.exit(1);
+  });
+}
 
 module.exports = app;
