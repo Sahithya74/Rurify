@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import * as catalogService from '../../services/catalog';
 import Card from '../../components/ui/Card';
@@ -19,13 +19,25 @@ export default function ProductSearch() {
     catalogService.listCategories().then(setCategories).catch(() => {});
   }, []);
 
-  const runSearch = (q) => {
+  // Only the most recent request may update the page; a slow earlier
+  // response (e.g. the initial browse-all) must not overwrite newer results.
+  const latestRequest = useRef(0);
+  const fetchResults = (searchParams) => {
+    const requestId = ++latestRequest.current;
     setLoading(true);
     catalogService
-      .searchProducts({ q })
-      .then(setResults)
-      .finally(() => setLoading(false));
+      .searchProducts(searchParams)
+      .then((data) => {
+        if (requestId === latestRequest.current) setResults(data);
+      })
+      .catch(() => {
+        if (requestId === latestRequest.current) setResults([]);
+      })
+      .finally(() => {
+        if (requestId === latestRequest.current) setLoading(false);
+      });
   };
+  const runSearch = (q) => fetchResults({ q });
 
   useEffect(() => {
     runSearch(params.get('q') || '');
@@ -62,8 +74,7 @@ export default function ProductSearch() {
             key={c.id}
             onClick={() => {
               setQuery('');
-              setLoading(true);
-              catalogService.searchProducts({ categoryId: c.id }).then(setResults).finally(() => setLoading(false));
+              fetchResults({ categoryId: c.id });
             }}
             className="rounded-full border border-gray-200 px-3 py-1.5 text-xs font-semibold text-gray-600 hover:border-[var(--color-accent)] hover:text-[var(--color-dark)]"
           >

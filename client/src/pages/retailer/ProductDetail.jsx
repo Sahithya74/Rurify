@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import * as catalogService from '../../services/catalog';
 import * as orderService from '../../services/orders';
@@ -36,6 +36,7 @@ export default function ProductDetail() {
   const [placing, setPlacing] = useState(false);
   const [filters, setFilters] = useState({ requestedQty: '', maxDistance: '', maxPrice: '', deliveryOnly: false });
   const hasFilters = Object.values(filters).some(Boolean);
+  const latestRequest = useRef(0);
 
   const load = (f = filters) => {
     const params = {};
@@ -43,12 +44,19 @@ export default function ProductDetail() {
     if (f.maxDistance) params.maxDistance = f.maxDistance;
     if (f.maxPrice) params.maxPrice = f.maxPrice;
     if (f.deliveryOnly) params.deliveryOnly = true;
+    const requestId = ++latestRequest.current;
     setLoading(true);
     catalogService
       .getSuppliersForProduct(id, params)
-      .then(setData)
-      .catch((err) => toast.error(apiErrorMessage(err, 'Could not load suppliers')))
-      .finally(() => setLoading(false));
+      .then((result) => {
+        if (requestId === latestRequest.current) setData(result);
+      })
+      .catch((err) => {
+        if (requestId === latestRequest.current) toast.error(apiErrorMessage(err, 'Could not load suppliers'));
+      })
+      .finally(() => {
+        if (requestId === latestRequest.current) setLoading(false);
+      });
   };
 
   useEffect(() => {
