@@ -6,8 +6,13 @@ import EmptyState from '../../components/ui/EmptyState';
 import { ClassificationBadge } from '../../components/ui/Badge';
 
 const PRIORITY_STYLE = {
-  HIGH_PRIORITY: 'border-l-4 border-red-500',
-  CONSIDER_INCREASING: 'border-l-4 border-amber-500',
+  HIGH_PRIORITY: 'border-l-4 border-l-red-500',
+  CONSIDER_INCREASING: 'border-l-4 border-l-amber-500',
+};
+
+const PRIORITY_TEXT = {
+  HIGH_PRIORITY: 'text-red-600',
+  CONSIDER_INCREASING: 'text-amber-600',
 };
 
 const PRIORITY_LABEL = {
@@ -46,7 +51,9 @@ export default function StockingRecommendations() {
                 <ClassificationBadge classification={r.classification} />
               </div>
             </div>
-            <p className="mt-2 text-xs font-bold uppercase tracking-wide text-red-500">{PRIORITY_LABEL[r.priority]}</p>
+            <p className={`mt-2 text-xs font-bold uppercase tracking-wide ${PRIORITY_TEXT[r.priority]}`}>
+              {PRIORITY_LABEL[r.priority]}
+            </p>
             <p className="mt-2 text-sm text-[var(--color-text-soft)]">{r.reason}</p>
           </Card>
         ))}

@@ -27,7 +27,11 @@ export default function RegionalAnalytics() {
 
       <Card className="overflow-hidden p-0">
         <div style={{ height: 480 }}>
-          <MapContainer center={[17.9, 74.8]} zoom={8} style={{ height: '100%', width: '100%' }}>
+          <MapContainer
+            bounds={regions.map(({ region }) => [region.lat, region.lng])}
+            boundsOptions={{ padding: [48, 48] }}
+            style={{ height: '100%', width: '100%' }}
+          >
             <TileLayer
               attribution='&copy; OpenStreetMap contributors'
               url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
