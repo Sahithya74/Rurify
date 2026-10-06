@@ -1,0 +1,4 @@
+{
+  "ignore": ["database/*.sqlite", "uploads/*"],
+  "ext": "js,json"
+}
