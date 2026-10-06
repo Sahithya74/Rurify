@@ -85,6 +85,18 @@ npm test          # from the repo root, or `npm test` inside server/
 The suite seeds its own `server/database/test.sqlite` (gitignored) and starts the API on a
 random port, so it can run while your dev server is up.
 
+### Browser walkthrough
+
+```bash
+npm run seed            # the walkthrough places orders and adds products, so start clean
+npm run dev             # leave running
+npm run e2e             # E2E_URL=http://localhost:5174 if Vite chose another port
+```
+
+It uses `playwright-core` with a browser already installed on your machine (`msedge` by
+default, `E2E_BROWSER=chrome` for Chrome), so nothing extra is downloaded. Screenshots of
+every step land in `e2e/screenshots/` (gitignored).
+
 ## Frontend configuration
 
 The Vite dev server proxies `/api/*` to the backend (see `client/vite.config.js`), so the

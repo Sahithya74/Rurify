@@ -5,6 +5,7 @@ node_modules/
 server/uploads/*
 !server/uploads/.gitkeep
 dist/
+e2e/screenshots/
 build/
 .DS_Store
 npm-debug.log*

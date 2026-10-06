@@ -10,9 +10,11 @@
     "client": "npm run dev --prefix client",
     "seed": "npm run seed --prefix server",
     "test": "npm test --prefix server",
-    "build": "npm run build --prefix client"
+    "build": "npm run build --prefix client",
+    "e2e": "node e2e/walkthrough.mjs"
   },
   "devDependencies": {
-    "concurrently": "^9.1.0"
+    "concurrently": "^9.1.0",
+    "playwright-core": "^1.63.0"
   }
 }

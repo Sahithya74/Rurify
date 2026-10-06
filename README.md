@@ -132,6 +132,17 @@ database is never touched. It covers all four demo flows below, plus order edge 
 stock, illegal status transitions), CSV validation, demand alerts, regional scoring, and role
 isolation (cross-vendor edits, self-registering as admin, deactivated accounts).
 
+```bash
+npm run seed && npm run dev   # in one terminal
+npm run e2e                   # in another
+```
+
+`npm run e2e` drives your installed Edge (or Chrome, via `E2E_BROWSER=chrome`) through the
+real UI. It covers the landing page's scroll animations, all four demo flows by clicking,
+vendor and admin pages, the regional map, and phone-width layout. It fails on any console
+error or failed API call and saves screenshots to `e2e/screenshots/`. Set `E2E_URL` if Vite
+picked a port other than 5173.
+
 ### Demo accounts
 
 Password for every seeded account: **`Demo@1234`**
