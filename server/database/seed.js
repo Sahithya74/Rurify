@@ -19,6 +19,7 @@ const {
   Notification,
   AuditLog,
 } = require('../models');
+const { maybeSendDemandAlert } = require('../services/demandAlertService');
 
 if (env.db.dialect === 'mysql' && env.nodeEnv === 'production' && !process.env.FORCE_SEED) {
   console.error('Refusing to seed a production MySQL database without FORCE_SEED=1');
@@ -325,10 +326,11 @@ async function run() {
   console.log('Created retailer-vendor connections');
 
   // ------------------------------------------------------------ Search history
-  async function recordSearches(productKey, count) {
+  // `pool` restricts the activity to specific retailers (e.g. one region's shops).
+  async function recordSearches(productKey, count, pool = retailers) {
     const product = products[productKey];
     for (let i = 0; i < count; i++) {
-      const retailer = retailers[i % retailers.length];
+      const retailer = pool[i % pool.length];
       const row = await SearchHistory.create({
         retailerId: retailer.id,
         query: product.name,
@@ -339,11 +341,19 @@ async function run() {
     }
   }
 
-  await recordSearches('kiwi', 41);
-  await recordSearches('avocado', 60);
-  await recordSearches('oregano', 52);
-  await recordSearches('celery', 50);
+  // Counts are spaced so the top-5 order (Kiwi, Avocado, Oregano, Celery,
+  // Zucchini) survives a run of the demo flows, which add a few searches,
+  // orders, and requirements of their own.
+  await recordSearches('kiwi', 63);
+  await recordSearches('avocado', 85);
+  await recordSearches('oregano', 72);
+  await recordSearches('celery', 79);
   await recordSearches('zucchini', 25);
+  // Region-specific demand, so the regional view differs by region
+  const nashikRetailers = retailers.filter((r, i) => retailerDefs[i].regionIdx === 1);
+  const solapurRetailers = retailers.filter((r, i) => retailerDefs[i].regionIdx === 4);
+  await recordSearches('mozzarella', 20, nashikRetailers);
+  await recordSearches('quinoa', 12, solapurRetailers);
   // light background noise on a few common items so they stay clearly below the top 5
   for (const key of ['banana', 'tomato', 'mint', 'coriander', 'rice', 'paneer', 'broccoli', 'lettuce']) {
     await recordSearches(key, (GENERAL_KEYS.indexOf(key) % 5) + 1);
@@ -351,17 +361,17 @@ async function run() {
   console.log('Seeded search history');
 
   // ---------------------------------------------------------- Demand requests
-  async function recordDemandRequests(productKey, qtyList, preferredPrice = null) {
+  async function recordDemandRequests(productKey, qtyList, pool = retailers) {
     const product = products[productKey];
     const created = [];
     for (let i = 0; i < qtyList.length; i++) {
-      const retailer = retailers[i % retailers.length];
+      const retailer = pool[i % pool.length];
       const dr = await DemandRequest.create({
         retailerId: retailer.id,
         productId: product.id,
         requiredQty: qtyList[i],
         requiredDate: daysAgo(-7),
-        preferredPrice,
+        preferredPrice: null,
         notes: null,
         status: 'PENDING',
       });
@@ -373,9 +383,12 @@ async function run() {
   await recordDemandRequests('kiwi', [3, 3, 2, 4, 3, 2, 3, 2, 3, 2, 3, 2, 3, 2, 2]); // 15 requests
   // Celery: exactly 8 retailers, totaling 42kg — the aggregate-demo numbers
   await recordDemandRequests('celery', [6, 5, 6, 5, 5, 5, 5, 5]);
-  await recordDemandRequests('oregano', [1, 1, 1, 1, 1, 1, 1, 1, 1, 1]); // 10 requests
+  // Oregano: 20kg requested vs 10kg nearby stock -> "consider increasing inventory"
+  await recordDemandRequests('oregano', [2, 2, 2, 2, 2, 2, 2, 2, 2, 2]);
   await recordDemandRequests('avocado', [2, 2, 2, 3, 2, 2, 2, 2, 2, 2]); // 10 requests, well under 85kg stock
   await recordDemandRequests('zucchini', [2, 3, 2, 3, 2, 3]); // 6 requests
+  await recordDemandRequests('mozzarella', [5, 5, 4, 6, 5], nashikRetailers);
+  await recordDemandRequests('quinoa', [3, 2, 4, 3], solapurRetailers);
   console.log('Seeded demand requests');
 
   // ------------------------------------------------------------------- Orders
@@ -443,20 +456,18 @@ async function run() {
     },
     {
       userId: vendor1User.id,
-      type: 'NEW_REQUIREMENT',
-      title: 'New demand request: Celery',
-      message: '8 retailers in your region are requesting Celery (42 kg total, 0 kg nearby stock).',
-      isRead: false,
-    },
-    {
-      userId: vendor1User.id,
       type: 'NEW_ORDER',
       title: 'New order: Avocado',
       message: 'Shree Kirana Store ordered 5 kg of Avocado.',
       isRead: false,
     },
   ]);
-  console.log('Seeded notifications');
+  // Demand alerts come from the real alert service, not hand-written text
+  let alerts = 0;
+  for (const product of Object.values(products)) {
+    if (await maybeSendDemandAlert(product)) alerts++;
+  }
+  console.log(`Seeded notifications (+ ${alerts} computed demand alerts)`);
 
   await AuditLog.create({ userId: adminUser.id, action: 'SEED_COMPLETE', entityType: null, entityId: null, details: null });
 
@@ -465,9 +476,13 @@ async function run() {
   console.log('Demo accounts: retailer1@rurify.demo | vendor1@rurify.demo | admin@rurify.demo');
 }
 
-run()
-  .then(() => process.exit(0))
-  .catch((err) => {
-    console.error('Seeding failed:', err);
-    process.exit(1);
-  });
+module.exports = { seed: run };
+
+if (require.main === module) {
+  run()
+    .then(() => process.exit(0))
+    .catch((err) => {
+      console.error('Seeding failed:', err);
+      process.exit(1);
+    });
+}
