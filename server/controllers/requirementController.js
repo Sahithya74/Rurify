@@ -11,7 +11,8 @@ const asyncHandler = require('../utils/asyncHandler');
 const ApiError = require('../utils/ApiError');
 const { notifyMany, notify } = require('../services/notificationService');
 const { logAction } = require('../services/auditService');
-const { classify } = require('../services/demandService');
+const { computeDemandForProduct } = require('../services/demandService');
+const { maybeSendDemandAlert } = require('../services/demandAlertService');
 
 const createRequirement = asyncHandler(async (req, res) => {
   const retailer = await Retailer.findOne({ where: { userId: req.user.id } });
@@ -45,6 +46,7 @@ const createRequirement = asyncHandler(async (req, res) => {
     relatedEntityId: requirement.id,
   });
 
+  await maybeSendDemandAlert(product);
   await logAction(req.user.id, 'REQUIREMENT_CREATE', 'DemandRequest', requirement.id);
 
   res.status(201).json({ success: true, data: requirement });
@@ -137,7 +139,7 @@ const getAggregateForProduct = asyncHandler(async (req, res) => {
   const activeInventory = await Inventory.findAll({ where: { productId: product.id, isActive: true } });
   const nearbyStock = activeInventory.reduce((sum, i) => sum + i.quantity, 0);
 
-  const gapScore = Math.min(100, retailerIds.size * 10 + (nearbyStock === 0 ? 20 : 0));
+  const demand = await computeDemandForProduct(product.id);
 
   res.json({
     success: true,
@@ -146,7 +148,8 @@ const getAggregateForProduct = asyncHandler(async (req, res) => {
       retailersRequesting: retailerIds.size,
       totalRequestedQty,
       nearbyStock,
-      demandClassification: classify(gapScore),
+      demandScore: demand.demandScore,
+      demandClassification: demand.classification,
     },
   });
 });

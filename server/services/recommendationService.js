@@ -1,5 +1,5 @@
 const { Product } = require('../models');
-const { computeDemandForProduct } = require('./demandService');
+const { computeDemandForProducts, byDemand } = require('./demandService');
 
 /**
  * Builds a stocking recommendation for one product, from real computed
@@ -54,13 +54,14 @@ function buildRecommendation(product, demand) {
 
 async function getRecommendationsForVendor(vendor) {
   const products = await Product.findAll({ attributes: ['id', 'name', 'variety', 'unit'] });
+  const demandByProduct = await computeDemandForProducts(null, { regionId: vendor.regionId });
   const results = [];
   for (const product of products) {
-    const demand = await computeDemandForProduct(product.id, { regionId: vendor.regionId });
+    const demand = demandByProduct.get(product.id);
     const rec = buildRecommendation(product, demand);
-    if (rec.priority !== 'NONE') results.push(rec);
+    if (rec.priority !== 'NONE') results.push({ ...rec, rawScore: demand.rawScore });
   }
-  return results.sort((a, b) => b.demandScore - a.demandScore);
+  return results.sort(byDemand);
 }
 
 module.exports = { buildRecommendation, getRecommendationsForVendor };
