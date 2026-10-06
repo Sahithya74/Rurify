@@ -20,7 +20,9 @@ export default function ProductManagement() {
       setCategories(c);
     }).finally(() => setLoading(false));
   };
-  useEffect(load, []);
+  useEffect(() => {
+    load();
+  }, []);
 
   const addCategory = async (e) => {
     e.preventDefault();

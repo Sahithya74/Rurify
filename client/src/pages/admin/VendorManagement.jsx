@@ -12,7 +12,9 @@ export default function VendorManagement() {
   const [performance, setPerformance] = useState({});
 
   const load = () => adminService.listVendors().then(setVendors).finally(() => setLoading(false));
-  useEffect(load, []);
+  useEffect(() => {
+    load();
+  }, []);
 
   const toggleVerified = async (vendor) => {
     await adminService.verifyVendor(vendor.id, !vendor.verified);

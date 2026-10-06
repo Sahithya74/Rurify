@@ -23,7 +23,9 @@ export default function VendorOrders() {
   const [updating, setUpdating] = useState(null);
 
   const load = () => orderService.listOrders().then(setOrders).finally(() => setLoading(false));
-  useEffect(load, []);
+  useEffect(() => {
+    load();
+  }, []);
 
   const updateStatus = async (order, status) => {
     setUpdating(order.id);

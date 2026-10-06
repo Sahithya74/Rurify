@@ -13,7 +13,10 @@ export default function UserManagement() {
   const [roleFilter, setRoleFilter] = useState('');
 
   const load = () => adminService.listUsers(roleFilter ? { role: roleFilter } : {}).then(setUsers).finally(() => setLoading(false));
-  useEffect(load, [roleFilter]);
+  useEffect(() => {
+    load();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [roleFilter]);
 
   const toggleActive = async (user) => {
     await adminService.setUserActive(user.id, !user.isActive);

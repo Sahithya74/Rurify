@@ -12,7 +12,9 @@ export default function RetailerManagement() {
   const [activity, setActivity] = useState({});
 
   const load = () => adminService.listRetailers().then(setRetailers).finally(() => setLoading(false));
-  useEffect(load, []);
+  useEffect(() => {
+    load();
+  }, []);
 
   const toggleVerified = async (retailer) => {
     await adminService.verifyRetailer(retailer.id, !retailer.verified);

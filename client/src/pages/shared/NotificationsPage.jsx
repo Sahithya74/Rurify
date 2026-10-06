@@ -10,7 +10,9 @@ export default function NotificationsPage() {
   const [loading, setLoading] = useState(true);
 
   const load = () => notificationService.listNotifications().then(setItems).finally(() => setLoading(false));
-  useEffect(load, []);
+  useEffect(() => {
+    load();
+  }, []);
 
   const markAll = async () => {
     await notificationService.markAllRead();

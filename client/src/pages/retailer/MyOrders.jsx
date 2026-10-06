@@ -16,7 +16,9 @@ export default function MyOrders() {
   const [cancelTarget, setCancelTarget] = useState(null);
 
   const load = () => orderService.listOrders().then(setOrders).finally(() => setLoading(false));
-  useEffect(load, []);
+  useEffect(() => {
+    load();
+  }, []);
 
   const cancelOrder = async () => {
     try {
