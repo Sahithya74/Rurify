@@ -46,7 +46,10 @@ details? }`. Authenticated routes require `Authorization: Bearer <JWT>`.
 | GET | `/requirements` | retailer/vendor | Retailer: own requirements. Vendor: all pending requirements (platform-wide, to surface stocking opportunities) |
 | GET | `/requirements/:id` | any | Detail |
 | PUT | `/requirements/:id/respond` | vendor | `{ response: AVAILABLE | CAN_STOCK | NOT_AVAILABLE, notes? }` |
-| GET | `/requirements/aggregate/:productId` | any | `{ retailersRequesting, totalRequestedQty, nearbyStock, demandClassification }` |
+| GET | `/requirements/aggregate/:productId` | any | `{ retailersRequesting, totalRequestedQty, nearbyStock, demandScore, demandClassification }`. The score is the same Demand Intelligence Score used everywhere else |
+
+Creating a requirement may also trigger a `DEMAND_ALERT` notification to vendors (see
+docs/architecture.md).
 
 ## Orders
 
@@ -114,6 +117,7 @@ All routes below require `authorize('admin')`.
 | GET | `/admin/requirements?status=` | All requirements |
 | GET | `/admin/analytics/demand` | Most searched/requested/ordered/unavailable, supply gaps |
 | GET | `/admin/audit-logs` | Audit trail |
+| GET | `/admin/settings` | Read-only live scoring config (match weights, demand weights/cap/thresholds, sync and alert settings) |
 
 ## Error responses
 

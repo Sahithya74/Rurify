@@ -25,7 +25,7 @@ Copy `server/.env.example` to `server/.env`. All variables:
 | `DB_DIALECT` | `sqlite` | `sqlite` or `mysql` |
 | `DB_STORAGE` | `./database/dev.sqlite` | Only used when `DB_DIALECT=sqlite` |
 | `DB_HOST` / `DB_PORT` / `DB_NAME` / `DB_USER` / `DB_PASSWORD` | — | Only used when `DB_DIALECT=mysql` |
-| `JWT_SECRET` | *(placeholder)* | **Change this in any real deployment** |
+| `JWT_SECRET` | *(placeholder)* | **Required in production.** The API refuses to start with `NODE_ENV=production` if this is unset or still a placeholder |
 | `JWT_EXPIRES_IN` | `7d` | |
 | `CLIENT_ORIGIN` | `http://localhost:5173` | CORS allow-list |
 | `SEED_DEMO_PASSWORD` | `Demo@1234` | Password assigned to every seeded account |
@@ -75,6 +75,15 @@ To run them separately:
 npm run server   # API only
 npm run client   # frontend only
 ```
+
+## Tests
+
+```bash
+npm test          # from the repo root, or `npm test` inside server/
+```
+
+The suite seeds its own `server/database/test.sqlite` (gitignored) and starts the API on a
+random port, so it can run while your dev server is up.
 
 ## Frontend configuration
 

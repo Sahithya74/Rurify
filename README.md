@@ -44,10 +44,14 @@ Inventory changes sync to connected retailers automatically.
   and nearby supply. Classified LOW / MEDIUM / HIGH / VERY HIGH. **Explicitly not AI/ML** — the
   architecture leaves room for a future model to replace the formula without changing the API.
 - **Stocking recommendations** — generated from real demand + supply data, never hard-coded.
-- **CSV inventory import** — column validation, duplicate detection, per-row import summary.
+- **Demand alerts** — vendors get an in-app alert when a product's demand turns HIGH and nearby
+  supply can't cover what retailers asked for (max once per product per day).
+- **CSV inventory import** — column validation, duplicate detection, per-row import summary,
+  and a downloadable template.
 - **Regional analytics** — a Leaflet/OpenStreetMap view of demand by region.
 - **Admin console** — users, vendors, retailers, products/categories, orders, requirements,
-  platform-wide demand analytics, and an audit log.
+  platform-wide demand analytics, an audit log, and a read-only view of the live scoring
+  configuration.
 - **Role-based security** — JWT auth, bcrypt password hashing, strict role isolation (a
   retailer cannot reach vendor/admin APIs; a vendor cannot touch another vendor's inventory),
   input validation on every mutating route, rate limiting, centralized error handling that
@@ -117,6 +121,17 @@ hard-coded).
 npm run dev   # runs the API (port 5001) and the client (Vite, default port 5173) together
 ```
 
+### Tests
+
+```bash
+npm test
+```
+
+Runs the API integration suite (`server/tests/`) against a throwaway `test.sqlite`, so your dev
+database is never touched. It covers all four demo flows below, plus order edge cases (MOQ,
+stock, illegal status transitions), CSV validation, demand alerts, regional scoring, and role
+isolation (cross-vendor edits, self-registering as admin, deactivated accounts).
+
 ### Demo accounts
 
 Password for every seeded account: **`Demo@1234`**
@@ -134,12 +149,14 @@ Password for every seeded account: **`Demo@1234`**
 1. **Log in as `retailer1`, search "Avocado".** Two suppliers appear with different match
    scores (12km/₹280 vs 21km/₹260). Place an order; log in as `vendor1` and accept it.
 2. **Search "Celery".** No nearby stock — raise a requirement. Log in as `vendor1` and open
-   *Requirements*: it shows 8 retailers requesting a total of 42kg with 0kg nearby stock.
+   *Requirements*: it shows 8 retailers requesting a total of 42kg (plus your new request) with
+   0kg nearby stock and VERY HIGH demand. *Notifications* holds the matching demand alert.
 3. **As `vendor1`, add a new product** (e.g. "Japanese Cucumber") in *Inventory*. Log back in
    as `retailer1` — within one poll cycle (~10s) the dashboard shows a "new product available"
    notification, with no manual refresh.
 4. **As `vendor1`, open *Demand Intelligence*.** The top-5 list (Kiwi, Avocado, Oregano, Celery,
-   Zucchini) and every score shown is computed live from the seeded activity data.
+   Zucchini) and every score shown is computed live from the seeded activity data. *Stocking*
+   shows "Kiwi — HIGH PRIORITY FOR STOCKING" with the reasoning in numbers.
 
 ## Database schema
 

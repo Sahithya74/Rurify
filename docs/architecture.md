@@ -64,18 +64,27 @@ Explicitly rule-based, explicitly **not** machine learning — labeled "Demand I
 Score" everywhere in the UI and API, never "AI".
 
 ```
-raw = 1×searches + 3×requirementRequests + 2×orderAttempts + 2×completedOrders + gapBonus
+activity = 1×searches + 3×requirementRequests + 2×orderAttempts + 2×completedOrders
 gapBonus = 20 if (searches>0 or requests>0) and nearbyStock==0
          = 10 if nearbyStock>0 and totalRequestedQty>nearbyStock
          = 0 otherwise
-score = round(min(100, raw / 150 * 100))
+raw      = activity / regionShare + gapBonus
+score    = round(min(100, raw / 150 * 100))
 ```
 
 Classification: 0–30 `LOW` · 31–60 `MEDIUM` · 61–80 `HIGH` · 81–100 `VERY_HIGH`.
 
-All four inputs are plain counts/sums read live from `SearchHistory`, `DemandRequest`, and
-`Order` — nothing here is cached or hand-tuned per product. The weights and cap are the only
-"magic numbers," and they're defined once, in one file, with a comment pointing here.
+**Regional scoring.** `regionShare` is 1 for the platform-wide score. When scoring one region
+(vendor recommendations, the regional map), it is that region's share of all retailers. A
+region with 4 of 20 retailers has its activity divided by 0.2. Without this, a small region
+could never score above LOW however intense its demand was, because the 0–100 scale is
+calibrated for platform-wide totals. Ties at the 100 cap are broken by the uncapped raw score.
+
+All inputs are plain counts/sums read live from `SearchHistory`, `DemandRequest`, `Order`,
+and `Inventory`, with nothing cached or hand-tuned per product. They are fetched for the
+whole catalog in five `GROUP BY` queries (`computeDemandForProducts`), not per product, so
+cost doesn't grow with the catalog. The weights and cap are the only "magic numbers"; they're
+defined once and shown read-only on the admin Settings page.
 
 **Stocking recommendations** (`recommendationService.js`) are then derived purely from a
 product's demand score + its current nearby active stock:
@@ -86,6 +95,13 @@ product's demand score + its current nearby active stock:
 
 The `reason` string is generated from the actual numbers (search count, requirement count,
 requested quantity, nearby stock) — never a static template with no data behind it.
+
+**Demand alerts** (`demandAlertService.js`). Each new requirement re-scores its product. If
+demand is HIGH/VERY_HIGH and nearby stock is below the total requested quantity, every
+vendor gets an in-app `DEMAND_ALERT` naming the retailer count, requested quantity, current
+supply, and score. To avoid spam, it fires at most once per product per 24 hours. Email, SMS,
+and WhatsApp delivery would hang off `notificationService.notifyMany`; only in-app delivery
+exists today.
 
 ## Automatic inventory synchronization
 
