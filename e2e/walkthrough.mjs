@@ -6,12 +6,15 @@
 // (`npm run seed`); it places orders and adds products as it goes.
 //   E2E_URL      app URL                    (default http://localhost:5173)
 //   E2E_BROWSER  installed browser channel  (default msedge; or chrome)
+//   E2E_PASSWORD / E2E_ADMIN_PASSWORD  seeded account passwords (default Demo@1234)
 import { chromium } from 'playwright-core';
 import { mkdirSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
 
 const APP = (process.env.E2E_URL || 'http://localhost:5173').replace(/\/$/, '');
+const DEMO_PASSWORD = process.env.E2E_PASSWORD || 'Demo@1234';
+const ADMIN_PASSWORD = process.env.E2E_ADMIN_PASSWORD || DEMO_PASSWORD;
 const SHOTS = path.join(path.dirname(fileURLToPath(import.meta.url)), 'screenshots');
 mkdirSync(SHOTS, { recursive: true });
 const results = [];
@@ -50,7 +53,8 @@ const shot = (page, name, fullPage = false) => page.screenshot({ path: path.join
 async function login(page, email) {
   await page.goto(`${APP}/login`);
   await page.locator('input[type=email]').fill(email);
-  await page.locator('input[type=password]').fill('Demo@1234');
+  const password = email.startsWith('admin@') ? ADMIN_PASSWORD : DEMO_PASSWORD;
+  await page.locator('input[type=password]').fill(password);
   await page.getByRole('button', { name: 'Log in' }).click();
   await page.waitForURL(/\/(retailer|vendor|admin)/, { timeout: 10000 });
 }

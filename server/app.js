@@ -23,6 +23,11 @@ const adminRoutes = require('./routes/adminRoutes');
 
 const app = express();
 
+// Behind the local Vite proxy / tunnel every request arrives from loopback;
+// read the client IP from X-Forwarded-For only in that case, so rate limits
+// apply per visitor. Direct (non-loopback) clients can't spoof the header.
+app.set('trust proxy', 'loopback');
+
 app.use(helmet());
 app.use(cors({ origin: env.clientOrigin, credentials: true }));
 app.use(express.json({ limit: '1mb' }));

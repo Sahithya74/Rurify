@@ -4,6 +4,9 @@
 process.env.DB_DIALECT = 'sqlite';
 process.env.DB_STORAGE = './database/test.sqlite';
 process.env.NODE_ENV = 'test';
+// Pin test credentials so a customized server/.env doesn't affect the suite
+process.env.SEED_DEMO_PASSWORD = 'Demo@1234';
+process.env.SEED_ADMIN_PASSWORD = 'Demo@1234';
 
 const { test, before, after } = require('node:test');
 const assert = require('node:assert/strict');

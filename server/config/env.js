@@ -36,4 +36,5 @@ module.exports = {
   },
   clientOrigin: process.env.CLIENT_ORIGIN || 'http://localhost:5173',
   seedDemoPassword: process.env.SEED_DEMO_PASSWORD || 'Demo@1234',
+  seedAdminPassword: process.env.SEED_ADMIN_PASSWORD || process.env.SEED_DEMO_PASSWORD || 'Demo@1234',
 };

@@ -97,6 +97,25 @@ It uses `playwright-core` with a browser already installed on your machine (`mse
 default, `E2E_BROWSER=chrome` for Chrome), so nothing extra is downloaded. Screenshots of
 every step land in `e2e/screenshots/` (gitignored).
 
+## Sharing a temporary public link
+
+To let someone outside your machine try the app, without deploying it:
+
+1. **Secure it first.** In `server/.env`, set a long random `JWT_SECRET` (the placeholder is
+   public in this repo, so anyone could forge tokens with it) and change `SEED_DEMO_PASSWORD` /
+   `SEED_ADMIN_PASSWORD` from `Demo@1234`, then `npm run seed`.
+2. Build and serve the production frontend (not the dev server):
+   `npm run build`, `npm run server`, and in `client/`, `npm run preview` (port 4173).
+3. Open a Cloudflare quick tunnel (no account needed; install
+   [cloudflared](https://developers.cloudflare.com/cloudflare-one/connections/connect-apps/install-and-setup/installation/)):
+   `cloudflared tunnel --url http://localhost:4173`. It prints a
+   `https://<random>.trycloudflare.com` URL; `client/vite.config.js` already allows that host.
+
+The link works only while your machine, the API, the preview server, and `cloudflared` are
+running, and changes every time the tunnel restarts. The login page hides the demo-account
+hint on any host other than localhost. The API trusts `X-Forwarded-For` only from loopback,
+so rate limits apply per visitor rather than to the tunnel as a whole.
+
 ## Frontend configuration
 
 The Vite dev server proxies `/api/*` to the backend (see `client/vite.config.js`), so the

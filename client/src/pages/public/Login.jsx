@@ -7,6 +7,8 @@ import Button from '../../components/ui/Button';
 import { Field, Input } from '../../components/ui/Field';
 
 const ROLE_HOME = { retailer: '/retailer', vendor: '/vendor', admin: '/admin' };
+// Demo credentials are only advertised when running locally, never on a shared URL.
+const IS_LOCAL = ['localhost', '127.0.0.1'].includes(window.location.hostname);
 
 export default function Login() {
   const { login } = useAuth();
@@ -73,10 +75,12 @@ export default function Login() {
           </Link>
         </p>
 
-        <div className="mt-6 rounded-lg bg-[var(--color-sand)] p-4 text-xs text-[var(--color-text-soft)]">
-          <p className="font-semibold">Demo accounts (password: Demo@1234)</p>
-          <p className="mt-1">retailer1@rurify.demo &middot; vendor1@rurify.demo &middot; admin@rurify.demo</p>
-        </div>
+        {IS_LOCAL && (
+          <div className="mt-6 rounded-lg bg-[var(--color-sand)] p-4 text-xs text-[var(--color-text-soft)]">
+            <p className="font-semibold">Demo accounts (default password: Demo@1234)</p>
+            <p className="mt-1">retailer1@rurify.demo &middot; vendor1@rurify.demo &middot; admin@rurify.demo</p>
+          </div>
+        )}
       </div>
     </div>
   );

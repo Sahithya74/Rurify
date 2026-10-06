@@ -35,6 +35,7 @@ async function run() {
   await sequelize.sync({ force: true });
 
   const passwordHash = await bcrypt.hash(env.seedDemoPassword, 10);
+  const adminPasswordHash = await bcrypt.hash(env.seedAdminPassword, 10);
 
   // ---------------------------------------------------------------- Regions
   const regionDefs = [
@@ -201,7 +202,7 @@ async function run() {
   // --------------------------------------------------------- Admin account
   const adminUser = await User.create({
     email: 'admin@rurify.demo',
-    passwordHash,
+    passwordHash: adminPasswordHash,
     name: 'Platform Admin',
     role: 'admin',
   });
@@ -486,8 +487,12 @@ async function run() {
   await AuditLog.create({ userId: adminUser.id, action: 'SEED_COMPLETE', entityType: null, entityId: null, details: null });
 
   console.log('\nSeed complete.');
-  console.log(`Demo password for every seeded account: ${env.seedDemoPassword}`);
   console.log('Demo accounts: retailer1@rurify.demo | vendor1@rurify.demo | admin@rurify.demo');
+  if (env.seedDemoPassword === 'Demo@1234' && env.seedAdminPassword === 'Demo@1234') {
+    console.log('Password for every seeded account: Demo@1234');
+  } else {
+    console.log('Passwords: SEED_DEMO_PASSWORD (retailers/vendors) and SEED_ADMIN_PASSWORD (admin) in server/.env');
+  }
 }
 
 module.exports = { seed: run };
