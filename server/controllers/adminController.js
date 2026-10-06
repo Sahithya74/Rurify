@@ -14,7 +14,9 @@ const {
 const asyncHandler = require('../utils/asyncHandler');
 const ApiError = require('../utils/ApiError');
 const { logAction } = require('../services/auditService');
-const { getTopProducts } = require('../services/demandService');
+const { getTopProducts, WEIGHTS: DEMAND_WEIGHTS, RAW_SCORE_CAP } = require('../services/demandService');
+const { WEIGHTS: MATCH_WEIGHTS } = require('../services/matchingService');
+const env = require('../config/env');
 
 // ---- Users ----
 const listUsers = asyncHandler(async (req, res) => {
@@ -169,6 +171,25 @@ const demandAnalytics = asyncHandler(async (req, res) => {
   });
 });
 
+// ---- Settings (read-only view of the live scoring configuration) ----
+const platformSettings = asyncHandler(async (req, res) => {
+  res.json({
+    success: true,
+    data: {
+      matchScoreWeights: MATCH_WEIGHTS,
+      demandScore: {
+        weights: DEMAND_WEIGHTS,
+        rawScoreCap: RAW_SCORE_CAP,
+        availabilityGapBonus: { noNearbyStock: 20, stockBelowRequested: 10 },
+        classification: { LOW: '0-30', MEDIUM: '31-60', HIGH: '61-80', VERY_HIGH: '81-100' },
+      },
+      inventorySync: { mechanism: 'polling', clientIntervalSeconds: 10 },
+      demandAlerts: { channel: 'in-app', cooldownHours: 24 },
+      database: env.db.dialect,
+    },
+  });
+});
+
 // ---- Audit logs ----
 const listAuditLogs = asyncHandler(async (req, res) => {
   const logs = await AuditLog.findAll({
@@ -195,5 +216,6 @@ module.exports = {
   listAllOrders,
   listAllRequirements,
   demandAnalytics,
+  platformSettings,
   listAuditLogs,
 };

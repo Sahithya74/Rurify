@@ -27,5 +27,6 @@ router.get('/orders', admin.listAllOrders);
 router.get('/requirements', admin.listAllRequirements);
 router.get('/analytics/demand', admin.demandAnalytics);
 router.get('/audit-logs', admin.listAuditLogs);
+router.get('/settings', admin.platformSettings);
 
 module.exports = router;

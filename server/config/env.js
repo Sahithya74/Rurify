@@ -8,6 +8,16 @@ function required(name, fallback) {
   return value;
 }
 
+const INSECURE_SECRETS = [
+  undefined,
+  '',
+  'dev-only-insecure-secret-change-me',
+  'change-this-to-a-long-random-string-in-production',
+];
+if (process.env.NODE_ENV === 'production' && INSECURE_SECRETS.includes(process.env.JWT_SECRET)) {
+  throw new Error('JWT_SECRET must be set to a strong, unique value in production');
+}
+
 module.exports = {
   port: parseInt(process.env.PORT || '5000', 10),
   nodeEnv: process.env.NODE_ENV || 'development',
