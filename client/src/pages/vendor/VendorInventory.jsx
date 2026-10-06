@@ -41,6 +41,7 @@ function AddProductModal({ categories, onClose, onCreated }) {
         quantity: Number(form.quantity),
         price: Number(form.price),
         moq: Number(form.moq),
+        expiryDate: form.expiryDate || null,
         imageUrl: form.imageUrl || `https://placehold.co/600x400/png?text=${encodeURIComponent(form.productName)}`,
       });
       toast.success(`${form.productName} added to your catalog.`);

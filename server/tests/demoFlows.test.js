@@ -195,6 +195,27 @@ test('flow 3: new product, quantity and price changes reach the connected retail
   assert.equal((await call('POST', '/inventory', vendor1, { ...created.json.data, productName: 'Cucumber', variety: 'Japanese', categoryId: veg.id, unit: 'kg', freshness: 'FRESH' })).status, 409);
 });
 
+test('blank optional form fields are accepted (as the add-product form sends them)', async () => {
+  const res = await call('POST', '/inventory', vendor2, {
+    productName: 'Leek',
+    variety: '',
+    categoryId: 2,
+    unit: 'kg',
+    quantity: 5,
+    price: 80,
+    moq: 1,
+    freshness: 'FRESH',
+    expiryDate: '',
+    imageUrl: '',
+    description: '',
+    deliveryAvailable: true,
+  });
+  assert.equal(res.status, 201, JSON.stringify(res.json));
+
+  const req = await call('POST', '/requirements', retailer, { productId: 2, requiredQty: 1, requiredDate: '', preferredPrice: '' });
+  assert.equal(req.status, 201, JSON.stringify(req.json));
+});
+
 test('CSV import: valid rows import, bad rows and duplicates are reported', async () => {
   const csv = [
     'productName,category,variety,unit,quantity,price,moq,freshness,deliveryAvailable',
