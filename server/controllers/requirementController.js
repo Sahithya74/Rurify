@@ -80,7 +80,11 @@ const listRequirements = asyncHandler(async (req, res) => {
       order: [['createdAt', 'DESC']],
     });
 
-    return res.json({ success: true, data: requirements });
+    const data = requirements.map((r) => ({
+      ...r.toJSON(),
+      myResponse: r.VendorResponses.find((v) => v.vendorId === vendor.id)?.response || null,
+    }));
+    return res.json({ success: true, data });
   }
 
   throw new ApiError(403, 'Not available for admin via this endpoint');

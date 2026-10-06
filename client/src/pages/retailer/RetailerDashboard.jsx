@@ -9,6 +9,7 @@ import Card from '../../components/ui/Card';
 import Spinner from '../../components/ui/Spinner';
 import EmptyState from '../../components/ui/EmptyState';
 import Button from '../../components/ui/Button';
+import { ClassificationBadge } from '../../components/ui/Badge';
 
 const FIELD_LABEL = {
   quantity: 'Stock updated',
@@ -31,7 +32,9 @@ export default function RetailerDashboard() {
       .finally(() => setLoading(false));
   };
 
-  useEffect(load, []);
+  useEffect(() => {
+    load();
+  }, []);
 
   usePolling(() => {
     inventoryService.getSyncFeed(lastSeenRef.current).then((res) => {
@@ -95,6 +98,28 @@ export default function RetailerDashboard() {
           </Link>
         </Card>
       </div>
+
+      {data.stillUnavailable?.length > 0 && (
+        <Card>
+          <h2 className="font-bold text-[var(--color-dark)]">Still unavailable nearby</h2>
+          <p className="mt-1 text-xs text-gray-400">
+            Products you requested that no supplier stocks yet. Vendors can see this demand.
+          </p>
+          <div className="mt-3 divide-y divide-gray-100">
+            {data.stillUnavailable.map((p) => (
+              <div key={p.productId} className="flex items-center justify-between py-3 text-sm">
+                <div>
+                  <p className="font-semibold text-[var(--color-dark)]">{p.name}</p>
+                  <p className="text-xs text-gray-400">
+                    {p.retailersRequesting} request{p.retailersRequesting !== 1 ? 's' : ''} across the platform
+                  </p>
+                </div>
+                <ClassificationBadge classification={p.classification} />
+              </div>
+            ))}
+          </div>
+        </Card>
+      )}
 
       {data.totalConnectedSuppliers === 0 && (
         <EmptyState

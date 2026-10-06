@@ -11,7 +11,7 @@ const {
 } = require('../models');
 const asyncHandler = require('../utils/asyncHandler');
 const ApiError = require('../utils/ApiError');
-const { getTopProducts } = require('../services/demandService');
+const { getTopProducts, computeDemandForProducts } = require('../services/demandService');
 const { getRecommendationsForVendor } = require('../services/recommendationService');
 
 const ACTIVE_ORDER_STATUSES = ['PENDING', 'ACCEPTED', 'PROCESSING', 'READY', 'OUT_FOR_DELIVERY'];
@@ -37,12 +37,30 @@ const retailerDashboard = asyncHandler(async (req, res) => {
         : [],
     ]);
 
+  // Products this retailer asked for that still have no active stock anywhere
+  const pending = await DemandRequest.findAll({
+    where: { retailerId: retailer.id, status: 'PENDING' },
+    include: [{ model: Product, attributes: ['id', 'name', 'variety', 'unit'] }],
+  });
+  const requestedIds = [...new Set(pending.map((r) => r.productId))];
+  const demand = requestedIds.length ? await computeDemandForProducts(requestedIds) : new Map();
+  const stillUnavailable = requestedIds
+    .map((id) => ({ product: pending.find((r) => r.productId === id).Product, demand: demand.get(id) }))
+    .filter(({ demand: d }) => d && d.nearbyStock === 0)
+    .map(({ product, demand: d }) => ({
+      productId: product.id,
+      name: product.variety ? `${product.name} — ${product.variety}` : product.name,
+      retailersRequesting: d.requirementRequests,
+      classification: d.classification,
+    }));
+
   res.json({
     success: true,
     data: {
       totalConnectedSuppliers,
       pendingRequirements,
       activeOrders,
+      stillUnavailable,
       recentSupplierUpdates: recentSupplierUpdates.map((log) => ({
         id: log.id,
         field: log.field,

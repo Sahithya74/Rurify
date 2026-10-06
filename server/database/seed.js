@@ -11,6 +11,7 @@ const {
   Category,
   Product,
   Inventory,
+  InventoryUpdateLog,
   RetailerVendorConnection,
   SearchHistory,
   DemandRequest,
@@ -313,6 +314,19 @@ async function run() {
 
   // Celery — intentionally zero suppliers anywhere (unmet demand demo flow)
 
+  // Record each listing in the change log (staggered over the last 10 days),
+  // as the live create path does, so the sync feed has history.
+  const listed = await Inventory.findAll({ where: { isActive: true }, order: [['id', 'ASC']] });
+  for (let i = 0; i < listed.length; i++) {
+    const log = await InventoryUpdateLog.create({
+      inventoryId: listed[i].id,
+      field: 'created',
+      oldValue: null,
+      newValue: 'listed',
+      changeType: 'CREATED',
+    });
+    await log.update({ createdAt: daysAgo(10 - (i % 10)) }, { silent: true });
+  }
   console.log('Seeded inventory (general + demo-critical rows)');
 
   // --------------------------------------------------- Retailer<->Vendor links

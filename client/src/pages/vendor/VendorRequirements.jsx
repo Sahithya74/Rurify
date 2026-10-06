@@ -8,6 +8,12 @@ import Spinner from '../../components/ui/Spinner';
 import EmptyState from '../../components/ui/EmptyState';
 import { ClassificationBadge } from '../../components/ui/Badge';
 
+const RESPONSES = [
+  ['AVAILABLE', 'Available'],
+  ['CAN_STOCK', 'Can stock'],
+  ['NOT_AVAILABLE', 'Not available'],
+];
+
 function AggregateHeader({ productId, productName }) {
   const [agg, setAgg] = useState(null);
   useEffect(() => {
@@ -33,7 +39,9 @@ export default function VendorRequirements() {
   const [responding, setResponding] = useState(null);
 
   const load = () => requirementService.listRequirements().then(setRequirements).finally(() => setLoading(false));
-  useEffect(load, []);
+  useEffect(() => {
+    load();
+  }, []);
 
   const respond = async (req, response) => {
     setResponding(req.id);
@@ -86,16 +94,21 @@ export default function VendorRequirements() {
                     </p>
                     {req.notes && <p className="text-xs text-gray-400">&ldquo;{req.notes}&rdquo;</p>}
                   </div>
-                  <div className="flex gap-2">
-                    <Button size="sm" loading={responding === req.id} onClick={() => respond(req, 'AVAILABLE')}>
-                      Available
-                    </Button>
-                    <Button size="sm" variant="outline" loading={responding === req.id} onClick={() => respond(req, 'CAN_STOCK')}>
-                      Can stock
-                    </Button>
-                    <Button size="sm" variant="ghost" loading={responding === req.id} onClick={() => respond(req, 'NOT_AVAILABLE')}>
-                      Not available
-                    </Button>
+                  <div className="flex flex-wrap items-center gap-2">
+                    {req.myResponse && (
+                      <span className="mr-1 text-xs text-gray-400">You responded:</span>
+                    )}
+                    {RESPONSES.map(([value, label]) => (
+                      <Button
+                        key={value}
+                        size="sm"
+                        variant={req.myResponse === value ? 'dark' : req.myResponse ? 'ghost' : value === 'AVAILABLE' ? 'primary' : 'outline'}
+                        disabled={responding === req.id}
+                        onClick={() => respond(req, value)}
+                      >
+                        {label}
+                      </Button>
+                    ))}
                   </div>
                 </Card>
               ))}
