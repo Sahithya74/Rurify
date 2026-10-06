@@ -8,7 +8,7 @@ import Card from '../../components/ui/Card';
 import Button from '../../components/ui/Button';
 import Spinner from '../../components/ui/Spinner';
 import EmptyState from '../../components/ui/EmptyState';
-import { Input } from '../../components/ui/Field';
+import { Field, Input } from '../../components/ui/Field';
 
 function MatchScoreRing({ score }) {
   const color = score >= 80 ? '#16a34a' : score >= 60 ? '#e8871e' : '#9ca3af';
@@ -34,16 +34,36 @@ export default function ProductDetail() {
   const [ordering, setOrdering] = useState(null); // inventoryId being ordered
   const [qty, setQty] = useState({});
   const [placing, setPlacing] = useState(false);
+  const [filters, setFilters] = useState({ requestedQty: '', maxDistance: '', maxPrice: '', deliveryOnly: false });
+  const hasFilters = Object.values(filters).some(Boolean);
+
+  const load = (f = filters) => {
+    const params = {};
+    if (f.requestedQty) params.requestedQty = f.requestedQty;
+    if (f.maxDistance) params.maxDistance = f.maxDistance;
+    if (f.maxPrice) params.maxPrice = f.maxPrice;
+    if (f.deliveryOnly) params.deliveryOnly = true;
+    setLoading(true);
+    catalogService
+      .getSuppliersForProduct(id, params)
+      .then(setData)
+      .catch((err) => toast.error(apiErrorMessage(err, 'Could not load suppliers')))
+      .finally(() => setLoading(false));
+  };
 
   useEffect(() => {
-    catalogService
-      .getSuppliersForProduct(id)
-      .then(setData)
-      .finally(() => setLoading(false));
+    load();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);
 
+  const clearFilters = () => {
+    const empty = { requestedQty: '', maxDistance: '', maxPrice: '', deliveryOnly: false };
+    setFilters(empty);
+    load(empty);
+  };
+
   const placeOrder = async (supplier) => {
-    const quantity = Number(qty[supplier.inventoryId] || supplier.moq);
+    const quantity = Number(qty[supplier.inventoryId] || filters.requestedQty || supplier.moq);
     setPlacing(true);
     try {
       await orderService.createOrder({ inventoryId: supplier.inventoryId, quantity });
@@ -56,7 +76,7 @@ export default function ProductDetail() {
     }
   };
 
-  if (loading) return <Spinner label="Ranking nearby suppliers..." />;
+  if (loading && !data) return <Spinner label="Ranking nearby suppliers..." />;
   if (!data) return null;
 
   return (
@@ -72,7 +92,44 @@ export default function ProductDetail() {
         </div>
       </div>
 
-      {data.unavailable ? (
+      <Card>
+        <form
+          onSubmit={(e) => {
+            e.preventDefault();
+            load();
+          }}
+          className="grid grid-cols-2 items-end gap-3 md:grid-cols-5"
+        >
+          <Field label={`Quantity (${data.product.unit})`}>
+            <Input type="number" min="0" step="any" value={filters.requestedQty} onChange={(e) => setFilters({ ...filters, requestedQty: e.target.value })} />
+          </Field>
+          <Field label="Max distance (km)">
+            <Input type="number" min="0" value={filters.maxDistance} onChange={(e) => setFilters({ ...filters, maxDistance: e.target.value })} />
+          </Field>
+          <Field label="Max price (₹)">
+            <Input type="number" min="0" value={filters.maxPrice} onChange={(e) => setFilters({ ...filters, maxPrice: e.target.value })} />
+          </Field>
+          <label className="flex items-center gap-2 pb-3 text-sm text-gray-600">
+            <input type="checkbox" checked={filters.deliveryOnly} onChange={(e) => setFilters({ ...filters, deliveryOnly: e.target.checked })} />
+            Delivery only
+          </label>
+          <div className="flex gap-2">
+            <Button type="submit" loading={loading} className="flex-1 justify-center">Apply</Button>
+            {hasFilters && <Button type="button" variant="ghost" onClick={clearFilters}>Clear</Button>}
+          </div>
+        </form>
+        <p className="mt-3 text-xs text-gray-400">
+          Entering a quantity re-ranks suppliers by whether they can cover it and meet their MOQ.
+        </p>
+      </Card>
+
+      {data.unavailable && hasFilters ? (
+        <EmptyState
+          title="No suppliers match these filters"
+          message="Try widening the distance or price, or clear the filters."
+          action={<Button variant="outline" onClick={clearFilters}>Clear filters</Button>}
+        />
+      ) : data.unavailable ? (
         <EmptyState
           title="Product currently unavailable nearby"
           message="No connected supplier has stock right now. Raise a requirement and we'll track the demand."
@@ -109,7 +166,7 @@ export default function ProductDetail() {
                       min={s.moq}
                       max={s.quantity}
                       className="w-24"
-                      placeholder={`${s.moq}`}
+                      placeholder={`${filters.requestedQty || s.moq}`}
                       value={qty[s.inventoryId] || ''}
                       onChange={(e) => setQty({ ...qty, [s.inventoryId]: e.target.value })}
                     />

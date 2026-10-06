@@ -208,7 +208,9 @@ export default function Landing() {
 
           <Reveal variant="scale" delay={3} className="mt-10 overflow-hidden rounded-2xl border border-black/5">
             <div className="flex items-center justify-between bg-[var(--color-dark)] px-6 py-4 text-white">
-              <span className="font-bold">Kiwi</span>
+              <span className="font-bold">
+                Kiwi <span className="ml-2 text-xs font-normal text-[var(--color-accent-soft)]">illustrative example</span>
+              </span>
               <span className="rounded-full bg-red-500/90 px-3 py-1 text-xs font-bold">VERY HIGH DEMAND</span>
             </div>
             <div className="grid grid-cols-2 gap-px bg-black/5 md:grid-cols-4">

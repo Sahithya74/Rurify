@@ -11,6 +11,7 @@ const navItems = [
   { to: '/admin/demand', label: 'Demand', icon: '\u{1F4C8}' },
   { to: '/admin/regional', label: 'Regional', icon: '\u{1F5FA}' },
   { to: '/admin/audit-logs', label: 'Audit Logs', icon: '\u{1F4DC}' },
+  { to: '/admin/settings', label: 'Settings', icon: '⚙' },
 ];
 
 export default function AdminLayout() {

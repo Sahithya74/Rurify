@@ -1,3 +1,4 @@
+import { lazy } from 'react';
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
 import { ToastProvider } from './context/ToastContext';
@@ -9,40 +10,44 @@ import VendorLayout from './layouts/VendorLayout';
 import AdminLayout from './layouts/AdminLayout';
 
 import Landing from './pages/public/Landing';
-import About from './pages/public/About';
-import HowItWorks from './pages/public/HowItWorks';
-import Login from './pages/public/Login';
-import Register from './pages/public/Register';
 
-import RetailerDashboard from './pages/retailer/RetailerDashboard';
-import ProductSearch from './pages/retailer/ProductSearch';
-import ProductDetail from './pages/retailer/ProductDetail';
-import RequirementCreate from './pages/retailer/RequirementCreate';
-import MyRequirements from './pages/retailer/MyRequirements';
-import MyOrders from './pages/retailer/MyOrders';
-import ConnectedSuppliers from './pages/retailer/ConnectedSuppliers';
+// Everything past the landing page is split per route, so Recharts and
+// Leaflet only download for the pages that use them.
+const About = lazy(() => import('./pages/public/About'));
+const HowItWorks = lazy(() => import('./pages/public/HowItWorks'));
+const Login = lazy(() => import('./pages/public/Login'));
+const Register = lazy(() => import('./pages/public/Register'));
 
-import VendorDashboard from './pages/vendor/VendorDashboard';
-import VendorInventory from './pages/vendor/VendorInventory';
-import VendorOrders from './pages/vendor/VendorOrders';
-import VendorRequirements from './pages/vendor/VendorRequirements';
-import DemandIntelligence from './pages/vendor/DemandIntelligence';
-import StockingRecommendations from './pages/vendor/StockingRecommendations';
-import VendorConnections from './pages/vendor/VendorConnections';
+const RetailerDashboard = lazy(() => import('./pages/retailer/RetailerDashboard'));
+const ProductSearch = lazy(() => import('./pages/retailer/ProductSearch'));
+const ProductDetail = lazy(() => import('./pages/retailer/ProductDetail'));
+const RequirementCreate = lazy(() => import('./pages/retailer/RequirementCreate'));
+const MyRequirements = lazy(() => import('./pages/retailer/MyRequirements'));
+const MyOrders = lazy(() => import('./pages/retailer/MyOrders'));
+const ConnectedSuppliers = lazy(() => import('./pages/retailer/ConnectedSuppliers'));
 
-import AdminDashboard from './pages/admin/AdminDashboard';
-import UserManagement from './pages/admin/UserManagement';
-import VendorManagement from './pages/admin/VendorManagement';
-import RetailerManagement from './pages/admin/RetailerManagement';
-import ProductManagement from './pages/admin/ProductManagement';
-import OrderManagement from './pages/admin/OrderManagement';
-import RequirementManagement from './pages/admin/RequirementManagement';
-import DemandAnalytics from './pages/admin/DemandAnalytics';
-import RegionalAnalytics from './pages/admin/RegionalAnalytics';
-import AuditLogs from './pages/admin/AuditLogs';
+const VendorDashboard = lazy(() => import('./pages/vendor/VendorDashboard'));
+const VendorInventory = lazy(() => import('./pages/vendor/VendorInventory'));
+const VendorOrders = lazy(() => import('./pages/vendor/VendorOrders'));
+const VendorRequirements = lazy(() => import('./pages/vendor/VendorRequirements'));
+const DemandIntelligence = lazy(() => import('./pages/vendor/DemandIntelligence'));
+const StockingRecommendations = lazy(() => import('./pages/vendor/StockingRecommendations'));
+const VendorConnections = lazy(() => import('./pages/vendor/VendorConnections'));
 
-import NotificationsPage from './pages/shared/NotificationsPage';
-import ProfilePage from './pages/shared/ProfilePage';
+const AdminDashboard = lazy(() => import('./pages/admin/AdminDashboard'));
+const UserManagement = lazy(() => import('./pages/admin/UserManagement'));
+const VendorManagement = lazy(() => import('./pages/admin/VendorManagement'));
+const RetailerManagement = lazy(() => import('./pages/admin/RetailerManagement'));
+const ProductManagement = lazy(() => import('./pages/admin/ProductManagement'));
+const OrderManagement = lazy(() => import('./pages/admin/OrderManagement'));
+const RequirementManagement = lazy(() => import('./pages/admin/RequirementManagement'));
+const DemandAnalytics = lazy(() => import('./pages/admin/DemandAnalytics'));
+const RegionalAnalytics = lazy(() => import('./pages/admin/RegionalAnalytics'));
+const AuditLogs = lazy(() => import('./pages/admin/AuditLogs'));
+const Settings = lazy(() => import('./pages/admin/Settings'));
+
+const NotificationsPage = lazy(() => import('./pages/shared/NotificationsPage'));
+const ProfilePage = lazy(() => import('./pages/shared/ProfilePage'));
 
 export default function App() {
   return (
@@ -114,6 +119,7 @@ export default function App() {
               <Route path="demand" element={<DemandAnalytics />} />
               <Route path="regional" element={<RegionalAnalytics />} />
               <Route path="audit-logs" element={<AuditLogs />} />
+              <Route path="settings" element={<Settings />} />
             </Route>
 
             <Route path="*" element={<Navigate to="/" replace />} />

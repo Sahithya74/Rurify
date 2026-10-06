@@ -124,6 +124,7 @@ function EditInventoryModal({ item, onClose, onSaved }) {
     freshness: item.freshness,
     expiryDate: item.expiryDate || '',
     deliveryAvailable: item.deliveryAvailable,
+    isActive: item.isActive,
   });
   const [submitting, setSubmitting] = useState(false);
 
@@ -170,6 +171,10 @@ function EditInventoryModal({ item, onClose, onSaved }) {
             <input type="checkbox" checked={form.deliveryAvailable} onChange={(e) => setForm({ ...form, deliveryAvailable: e.target.checked })} />
             Delivery available
           </label>
+          <label className="col-span-2 flex items-center gap-2 text-sm text-gray-600">
+            <input type="checkbox" checked={form.isActive} onChange={(e) => setForm({ ...form, isActive: e.target.checked })} />
+            Active (visible to retailers)
+          </label>
           <div className="col-span-2 mt-2 flex justify-end gap-3">
             <Button type="button" variant="ghost" onClick={onClose}>Cancel</Button>
             <Button type="submit" loading={submitting}>Save changes</Button>
@@ -178,6 +183,21 @@ function EditInventoryModal({ item, onClose, onSaved }) {
       </div>
     </div>
   );
+}
+
+const CSV_TEMPLATE = [
+  'productName,category,variety,unit,quantity,price,moq,freshness,expiryDate,deliveryAvailable',
+  'Avocado,Fruits,Hass,kg,40,290,5,FRESH,,true',
+  'Basil,Herbs,Italian,kg,8,380,1,GOOD,2026-12-31,yes',
+].join('\n');
+
+function downloadTemplate() {
+  const url = URL.createObjectURL(new Blob([CSV_TEMPLATE], { type: 'text/csv' }));
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'rurify-inventory-template.csv';
+  a.click();
+  URL.revokeObjectURL(url);
 }
 
 export default function VendorInventory() {
@@ -240,6 +260,9 @@ export default function VendorInventory() {
         </div>
         <div className="flex gap-3">
           <input ref={fileInputRef} type="file" accept=".csv" className="hidden" onChange={handleCsvUpload} />
+          <Button variant="ghost" onClick={downloadTemplate}>
+            CSV template
+          </Button>
           <Button variant="outline" loading={importing} onClick={() => fileInputRef.current?.click()}>
             Import CSV
           </Button>

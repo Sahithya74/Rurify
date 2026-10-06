@@ -1,5 +1,6 @@
 import { Link, Outlet, useLocation } from 'react-router-dom';
-import { useState } from 'react';
+import { Suspense, useState } from 'react';
+import Spinner from '../components/ui/Spinner';
 
 export default function PublicLayout() {
   const location = useLocation();
@@ -51,7 +52,9 @@ export default function PublicLayout() {
       </header>
 
       <main className="flex-1">
-        <Outlet />
+        <Suspense fallback={<Spinner />}>
+          <Outlet />
+        </Suspense>
       </main>
 
       <footer className="border-t border-black/5 bg-[var(--color-dark)] px-5 py-10 text-[var(--color-accent-soft)]">

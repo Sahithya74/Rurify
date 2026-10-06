@@ -20,3 +20,4 @@ export const listAdminOrders = (params) => api.get('/admin/orders', { params }).
 export const listAdminRequirements = (params) => api.get('/admin/requirements', { params }).then((r) => r.data.data);
 export const getDemandAnalytics = () => api.get('/admin/analytics/demand').then((r) => r.data.data);
 export const listAuditLogs = () => api.get('/admin/audit-logs').then((r) => r.data.data);
+export const getPlatformSettings = () => api.get('/admin/settings').then((r) => r.data.data);

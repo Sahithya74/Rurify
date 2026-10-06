@@ -1,4 +1,6 @@
+import { Suspense } from 'react';
 import { NavLink, Outlet, useNavigate } from 'react-router-dom';
+import Spinner from '../components/ui/Spinner';
 import { useAuth } from '../context/AuthContext';
 import NotificationBell from '../components/NotificationBell';
 
@@ -57,7 +59,9 @@ export default function DashboardShell({ navItems, roleLabel, basePath }) {
           </div>
         </header>
         <main className="flex-1 px-4 py-6 md:px-8">
-          <Outlet />
+          <Suspense fallback={<Spinner />}>
+            <Outlet />
+          </Suspense>
         </main>
         <nav className="flex justify-around border-t border-black/5 bg-white py-2 md:hidden">
           {navItems.slice(0, 5).map((item) => (
